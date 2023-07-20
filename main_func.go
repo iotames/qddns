@@ -38,10 +38,13 @@ func GetClientAli() *alidns20150109.Client {
 
 func CheckAliDNS(h func(rr alidns20150109.DescribeDomainRecordsResponseBodyDomainRecordsRecord)) {
 	logger := miniutils.GetLogger("")
-	if time.Since(sipInfo.DnsIpUpdatedAt) < time.Second*7200 {
+	if time.Since(sipInfo.DnsIpUpdatedAt) < time.Hour*48 {
 		realIP := GetRealIP()
+		if realIP == "" {
+			realIP = GetRealIP()
+		}
 		if realIP != "" && realIP == sipInfo.DnsIp {
-			logger.Info("---Skip--CheckAliDNS--sipInfo.DnsIpUpdatedAt---In(3600s)(realIP == sipInfo.DnsIp)--")
+			logger.Info("---Skip--CheckAliDNS--sipInfo.DnsIpUpdatedAt---In(48h)(realIP == sipInfo.DnsIp)--")
 			return
 		}
 	}
@@ -107,6 +110,8 @@ func GetRealIP() string {
 	logger := miniutils.GetLogger("")
 	c := http.DefaultClient
 	hreq, _ := http.NewRequest("GET", "https://httpbin.org/get", nil)
+	hreq.Header.Set("User-Agent", `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36`)
+	hreq.Header.Set("Accept", `text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7`)
 	resp, err := c.Do(hreq)
 	if err != nil {
 		logger.Warn("request https://httpbin.org/get err:", err)
@@ -115,17 +120,18 @@ func GetRealIP() string {
 	defer resp.Body.Close()
 	bd, err := io.ReadAll(resp.Body)
 	if err != nil {
-		logger.Warn("response https://httpbin.org/get err:", err)
+		logger.Warn(fmt.Sprintf("----GetRealIP-Error-io.ReadAll-err(%v)---", err))
 		return ""
 	}
 	hres := HttpBinResult{}
 	err = json.Unmarshal(bd, &hres)
 	if err != nil {
-		logger.Warn("response https://httpbin.org/get json.Unmarshal err:", err)
+		logger.Warn(fmt.Sprintf("----GetRealIP-Error--json.Unmarshal--err(%v)--bd(%s)--", err, string(bd)))
 		return ""
 	}
 	sipInfo.RealIpUpdatedAt = time.Now()
 	sipInfo.RealIp = hres.Origin
+	logger.Debug(fmt.Sprintf("-----GetRealIP--SUCCESS(%s)---", sipInfo.RealIp))
 	return sipInfo.RealIp
 }
 
@@ -133,16 +139,19 @@ func handleAliDNS(rr alidns20150109.DescribeDomainRecordsResponseBodyDomainRecor
 	logger := miniutils.GetLogger("")
 	si := miniutils.GetIndexOf[string](*rr.RR, SubDomains)
 	if si > -1 {
-		logger.Debug(fmt.Sprintf("---match--(%+v)---", rr))
+		logger.Debug(fmt.Sprintf("---handleAliDNS--Match--SUB_DOMAINS(%+v)--rr(%+v)---", SubDomains, rr))
 		oldValue := *rr.Value
 		realip := GetRealIP()
+		if realip == "" {
+			realip = GetRealIP()
+		}
 		sipInfo.DnsIp = oldValue
 		if realip == "" {
-			logger.Warn("---realIP is empty-----")
+			logger.Warn("---handleAliDNS--Skip--UpdateAliDNS-realIP is empty-----")
 			return
 		}
 		if realip == oldValue {
-			logger.Warn("----realip == oldValue")
+			logger.Debug("---handleAliDNS--Skip--UpdateAliDNS--(realip == oldValue)", oldValue)
 			return
 		}
 		// logger.Warn(fmt.Sprintf("---response(%s)---OldValue(%s)--origin(%s)-", string(bd), oldValue, hres.Origin))

@@ -1,4 +1,5 @@
 .env
 go.sum
 go.mod
+*.exe
 runtime/

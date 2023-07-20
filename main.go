@@ -10,9 +10,11 @@ import (
 func main() {
 	sipInfo = &ServerIpInfo{}
 	CheckAliDNS(handleAliDNS)
+	log.Printf("---End---CheckAliDNS-----\n")
 	for range time.Tick(time.Minute * time.Duration(CheckTTL)) {
-		log.Printf("---Begin---Check----ServerIpInfo(%+v)--", sipInfo)
+		log.Printf("---Begin---CheckAliDNS----ServerIpInfo(%+v)--\n", sipInfo)
 		CheckAliDNS(handleAliDNS)
+		log.Printf("---End---CheckAliDNS-----\n")
 	}
 }
 
