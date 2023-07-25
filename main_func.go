@@ -53,7 +53,8 @@ func CheckAliDNS(h func(rr alidns20150109.DescribeDomainRecordsResponseBodyDomai
 	client := GetClientAli()
 	result, err := client.DescribeDomainRecordsWithOptions(describeDomainRecordsRequest, runtime)
 	if err != nil {
-		panic(err)
+		logger.Error(fmt.Sprintf("-----err--CheckAliDNS--client.DescribeDomainRecordsWithOptions--err(%v)", err))
+		return
 	}
 	bd := result.Body
 	statusCode := *result.StatusCode
@@ -114,7 +115,7 @@ func GetRealIP() string {
 	hreq.Header.Set("Accept", `text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7`)
 	resp, err := c.Do(hreq)
 	if err != nil {
-		logger.Warn("request https://httpbin.org/get err:", err)
+		logger.Error(fmt.Sprintf("---error--for--GetRealIP---requestErr(%v)---", err))
 		return ""
 	}
 	defer resp.Body.Close()
