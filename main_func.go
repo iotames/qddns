@@ -1,10 +1,7 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
 	"time"
 
 	alidns20150109 "github.com/alibabacloud-go/alidns-20150109/v4/client"
@@ -90,10 +87,6 @@ func UpdateAliDNS(rr alidns20150109.DescribeDomainRecordsResponseBodyDomainRecor
 	logger.Info(fmt.Sprintf("---Success--UpdateAliDNS--Domain(%s.%s)->Value(%s)--", *rr.RR, *rr.DomainName, *rr.Value))
 }
 
-type HttpBinResult struct {
-	Origin string
-}
-
 type ServerIpInfo struct {
 	DnsIpUpdatedAt  time.Time
 	DnsIp           string
@@ -109,29 +102,8 @@ func GetRealIP() string {
 		return sipInfo.RealIp
 	}
 	logger := miniutils.GetLogger("")
-	c := http.DefaultClient
-	hreq, _ := http.NewRequest("GET", "https://httpbin.org/get", nil)
-	hreq.Header.Set("User-Agent", `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36`)
-	hreq.Header.Set("Accept", `text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7`)
-	resp, err := c.Do(hreq)
-	if err != nil {
-		logger.Error(fmt.Sprintf("---error--for--GetRealIP---requestErr(%v)---", err))
-		return ""
-	}
-	defer resp.Body.Close()
-	bd, err := io.ReadAll(resp.Body)
-	if err != nil {
-		logger.Warn(fmt.Sprintf("----GetRealIP-Error-io.ReadAll-err(%v)---", err))
-		return ""
-	}
-	hres := HttpBinResult{}
-	err = json.Unmarshal(bd, &hres)
-	if err != nil {
-		logger.Warn(fmt.Sprintf("----GetRealIP-Error--json.Unmarshal--err(%v)--bd(%s)--", err, string(bd)))
-		return ""
-	}
 	sipInfo.RealIpUpdatedAt = time.Now()
-	sipInfo.RealIp = hres.Origin
+	sipInfo.RealIp = TryGetRealIP()
 	logger.Debug(fmt.Sprintf("-----GetRealIP--SUCCESS(%s)---", sipInfo.RealIp))
 	return sipInfo.RealIp
 }
