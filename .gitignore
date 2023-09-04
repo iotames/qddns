@@ -1,7 +1,6 @@
 qddns
 .env
 go.sum
-go.mod
 *.exe
 *.log
 *.out
