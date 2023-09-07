@@ -8,11 +8,14 @@ import (
 )
 
 func main() {
-	sipInfo = &ServerIpInfo{}
+	IpInfoMap = make(map[string]*ServerIpInfo, len(SubDomains))
+	for _, v := range SubDomains {
+		IpInfoMap[v] = new(ServerIpInfo) // &ServerIpInfo{}
+	}
 	CheckAliDNS(handleAliDNS)
 	log.Printf("---End---CheckAliDNS-----\n")
 	for range time.Tick(time.Minute * time.Duration(CheckTTL)) {
-		log.Printf("---Begin---CheckAliDNS----ServerIpInfo(%+v)--\n", sipInfo)
+		log.Printf("---Begin---CheckAliDNS----IpInfoMap(%+v)--\n", IpInfoMap)
 		CheckAliDNS(handleAliDNS)
 		log.Printf("---End---CheckAliDNS-----\n")
 	}
