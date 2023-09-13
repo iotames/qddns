@@ -90,11 +90,11 @@ func TryGetRealIP() string {
 	requrl = "https://ip.3322.net"
 	ip = GetRealIpBy1(requrl)
 
-	if ip == "" {
-		// {"rs":1,"code":0,"address":"中国  福建省 泉州市 电信","ip":"117.24.81.51","isDomain":0}
-		requrl = "https://www.ip.cn/api/index?ip&type=0"
-		ip = GetRealIpBy2(requrl)
-	}
+	// if ip == "" {
+	// 	// {"rs":1,"code":0,"address":"中国  福建省 泉州市 电信","ip":"117.24.81.51","isDomain":0}
+	// 	requrl = "https://www.ip.cn/api/index?ip&type=0" 不准
+	// 	ip = GetRealIpBy2(requrl)
+	// }
 	if ip == "" {
 		// {"ret":"ok","ip":"117.24.81.51","data":["中国","福建","泉州","鲤城","电信","362000","0595"]}
 		requrl = "https://2023.ipchaxun.com"
